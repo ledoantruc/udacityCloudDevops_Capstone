@@ -70,7 +70,64 @@ jobs:
           eks-cluster-name: 'CloudDevOps-Capstone'
           aws-region: 'us-east-1'
 
+  lint:
+    docker:
+      - image: circleci/python:3.10
+    steps:
+      - checkout
+      - run:
+          name: Install hadolint
+          command: |
+            cd python-helloworld
+            sudo pip install --upgrade pip && sudo pip install -r requirements.txt
+            sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+              sudo chmod +x /bin/hadolint
+            
+      - run:
+          name: Lint
+          command: |
+            # This is linter for Dockerfiles
+            cd python-helloworld
+            hadolint Dockerfile
+            pylint --disable=R,C,W1203,W1202 app.py
+
+
+  build-push-docker-image:
+    docker:
+      - image: circleci/python:3.10
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.14
+          docker_layer_caching: true
+      - run:
+          name: build and push Docker image
+          command: |
+            dockerpath="truclemsoft"
+            image_name="clouddevops-capstone"
+            tag="v1.0-$CIRCLE_BUILD_NUM"
+
+            cd python-helloworld
+            docker build --tag "${dockerpath}/${image_name}:${tag}" .
+
+            # List docker images
+            docker image ls
+            
+            # Authenticate & tag
+            # https://docs.docker.com/engine/reference/commandline/login/
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+          
+            docker image push "$dockerpath/$image_name:$tag"
+
 workflows:
   Capstone-Project:
     jobs:
       - eks-config
+      - lint
+      - build-push-docker-image:
+          requires: [lint]
+          filters:
+            branches:
+              only: [main]
+
+      
