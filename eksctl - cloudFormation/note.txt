@@ -1,0 +1,1 @@
+Note that the eks cluster is created by eksctl, so I copy template of the created CloudFormation which is created by eksctl to here
