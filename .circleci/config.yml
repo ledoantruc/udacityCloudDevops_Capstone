@@ -105,11 +105,11 @@ jobs:
           command: |
             dockerpath="truclemsoft"
             image_name="clouddevops-capstone"
-            tag="v1.0-$CIRCLE_BUILD_NUM"
-
+            # tag="v1.0-$CIRCLE_BUILD_NUM"
+            tag="latest"
+            
             cd python-helloworld
-            # docker build --tag "${dockerpath}/${image_name}:${tag}" .
-            docker build --tag "${dockerpath}/${image_name}:latest" .
+            docker build --tag "${dockerpath}/${image_name}:${tag}" .
 
             # List docker images
             docker image ls
